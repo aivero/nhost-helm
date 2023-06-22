@@ -1,3 +1,6 @@
+{{- $fullname := include "nhost.fullname" . -}}
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -33,32 +36,86 @@ spec:
       serviceAccountName: {{ include "nhost.serviceAccountName" . }}
       securityContext:
         fsGroup: 2000
-{{- if .Values.graphql.persistence.enabled }}
+      volumes:
+        {{- if .Values.graphql.persistence.enabled }}
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "nhost.fullname" $ }}-graphql       
+        {{- end }}
+        
+        {{- range $k, $v := .Values.graphql.migrations.configMaps }}
+        - name: {{ $k | quote }}
+          configMap:
+            name: {{ include "common.tplvalues.render" (dict "value" (printf "%s-%s-migration" $fullname $v.name) "context" $) }}
+        {{- end }}
+        
+        {{- if .Values.graphql.metadata.configMap }}
+        - name: metadata
+          configMap:
+            name: {{ include "common.tplvalues.render" (dict "value" (printf "%s-%s-metadata" $fullname .Values.graphql.metadata.configMap.name ) "context" $) }}
+        
+        {{- end}}
       initContainers:
-      - name: {{ .Chart.Name }}-init
-        securityContext:
-          {{- toYaml .Values.securityContext | nindent 12 }}
-        image: "busybox:latest"
-        imagePullPolicy: {{ .Values.graphql.image.pullPolicy }}
+      - name: unpack-migration-metadata-tarballs-for-mounts
+        image: alpine
+        # todo: download migrations and metadata tarball from a cicd release of the matching branch (gitlab package registry)
         command:
-        - mkdir
-        args:
-        - -pv
-        - /data/migrations
-        - /data/metadata
-        resources:
-          {{- toYaml .Values.graphql.resources | nindent 12 }}
+          - sh
+          - "-c"
+          - |
+            set -e
+            apk add tree tar
+            {{- if .Values.graphql.metadata.configMap }}
+            tree -alh /metadata
+            mkdir -p /data/metadata || true
+            tar xvfj /metadata/metadata.tar.bz2 -C /data/metadata
+            tree -alh /data/metadata
+            {{- end }}
+            mkdir -p /data/migrations || true
+            {{- range $k, $v := .Values.graphql.migrations.configMaps }}
+            tree -alh /migrations
+            {{ printf "tar xvfj /migrations/%s/%s -C /data/migrations" $k (default "migrations.tar.bz2" $v.file) }}
+            tree -alh /data/migrations
+            {{- end }}
+
         volumeMounts:
-        - mountPath: /data
-          name: data
-{{- end }}
+          {{- range $k, $v := (((.Values).graphql).migrations).configMaps }}
+          - name: {{ $k | quote }}
+            mountPath: {{ printf "/migrations/%s/%s" $k (default "migrations.tar.bz2" $v.file) }}
+            subPath: {{ default "migrations.tar.bz2" $v.file }}
+          {{- end }}
+          {{- if ((.Values.graphql).metadata).configMap }}
+          - name: metadata
+            mountPath: /metadata/{{ default "metadata.tar.bz2" .Values.graphql.metadata.configMap.file }}
+            subPath: {{ default "metadata.tar.bz2" .Values.graphql.metadata.configMap.file }}
+          {{- end }}
+          - name: data
+            mountPath: /data
+      - name: wait-postgres
+        image: postgres:14.4-alpine
+        envFrom:
+          - secretRef:
+              name: {{ include "nhost.fullname" $ }}-database
+        command:
+          - 'sh'
+          - '-c'
+          - |
+            # make sure pg is ready to accept connections, user/pw are not strictly required
+            until pg_isready -d "$HASURA_GRAPHQL_DATABASE_URL"
+            do
+              echo "Waiting for postgres to be ready..."
+              sleep 2;
+            done
+            # Now able to connect to postgres
+            echo "Postgres is ready! Starting graphql server..."
+
       containers:
       - name: {{ .Chart.Name }}
         securityContext:
           capabilities:
             drop:
             - ALL
-          readOnlyRootFilesystem: true
+          readOnlyRootFilesystem: false
           runAsNonRoot: true
           runAsUser: 1000
         image: "{{ .Values.graphql.image.repository }}:{{ .Values.graphql.image.tag }}"
@@ -108,10 +165,6 @@ spec:
         volumeMounts:
         - mountPath: /data
           name: data
-      volumes:
-      - name: data
-        persistentVolumeClaim:
-          claimName: {{ include "nhost.fullname" $ }}-graphql
 {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:

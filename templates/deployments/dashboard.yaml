@@ -71,8 +71,6 @@ spec:
           value: https://{{ .Values.graphql.hostnames.api }}/v1/storage
         - name: NEXT_PUBLIC_NHOST_HASURA_CONSOLE_URL
           value: https://{{ .Values.graphql.hostnames.console }}
-        - name: NEXT_PUBLIC_NHOST_HASURA_MIGRATIONS_API_URL
-          value: https://{{ .Values.migrations.hostname }}
         - name: NEXT_PUBLIC_NHOST_HASURA_API_URL
           value: https://{{ .Values.graphql.hostnames.api }}
         {{- else }}
@@ -86,8 +84,6 @@ spec:
           value: http://{{ .Values.graphql.hostnames.api }}/v1/storage
         - name: NEXT_PUBLIC_NHOST_HASURA_CONSOLE_URL
           value: http://{{ .Values.graphql.hostnames.console }}
-        - name: NEXT_PUBLIC_NHOST_HASURA_MIGRATIONS_API_URL
-          value: http://{{ .Values.migrations.hostname }}
         - name: NEXT_PUBLIC_NHOST_HASURA_API_URL
           value: http://{{ .Values.graphql.hostnames.api }}
         envFrom:

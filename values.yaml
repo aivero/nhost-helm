@@ -27,9 +27,9 @@ global:
   # -- Shared ingress settings
   ingress:
     enableTls: false
-    className: nginx
+    className: traefik
     annotations:
-      cert-manager.io/cluster-issuer: letsencrypt-prod
+      cert-manager.io/cluster-issuer: ca-issuer
 
   secrets:
     jwtKey: 5152fa850c02dc222631cca898ed1485821a70912a6e3649c49076912daa3b62182ba013315915d64f40cddfbb8b58eb5bd11ba225336a6af45bbae07ca873f3
@@ -183,7 +183,15 @@ graphql:
 
   # -- persistence is required for this to work
   migrations:
-    enabled: false
+    enabled: true
+    configMaps:
+      nhost:
+        name: migrations.tar.bz2
+        file: migrations.tar.bz2
+  metadata:
+    configMap:
+      name: metadata.tar.bz2
+      file: metadata.tar.bz2
 
   image:
     repository: hasura/graphql-engine
@@ -206,33 +214,6 @@ graphql:
       cpu: 100m
       memory: 256Mi
 
-# -- Migrations API
-migrations:
-  enabled: true
-  hostname: nhost-migrations.local
-
-  logLevel: debug
-
-  image:
-    repository: fpoussin/hasura-cli
-    pullPolicy: IfNotPresent
-    tag: v2.21.0-bind-fix
-
-  replicaCount: 1
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 5
-    targetCPUUtilizationPercentage: 80
-    targetMemoryUtilizationPercentage: 80
-
-  resources:
-    limits:
-      cpu: 500m
-      memory: 512Mi
-    requests:
-      cpu: 100m
-      memory: 256Mi
 
 ##
 ## 3rd party services used for development
@@ -243,7 +224,7 @@ mailhog:
 
   ingress:
     enabled: true
-    ingressClassName: nginx
+    ingressClassName: traefik
     hosts:
       - host: mailhog.local
         paths:
