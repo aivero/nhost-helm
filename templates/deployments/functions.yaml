@@ -31,6 +31,22 @@ spec:
       serviceAccountName: {{ include "nhost.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+      - name: wait-hasura
+        image: curlimages/curl:7.84.0
+        command:
+          - 'sh'
+          - '-c'
+          - |
+            until [ "$(curl -s -w '%{http_code}' -o /dev/null "${HASURA_ENDPOINT}")" -eq 200 ]
+            do
+              echo \"waiting for hasura on ${HASURA_ENDPOINT}\
+              sleep 1
+            done
+            echo \"Successfully tested ${HASURA_ENDPOINT}\
+        env:
+        - name: HASURA_ENDPOINT
+          value: http://{{ include "nhost.fullname" . }}-graphql/healthz
       containers:
       - name: {{ .Chart.Name }}
         securityContext:

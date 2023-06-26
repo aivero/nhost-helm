@@ -133,4 +133,7 @@ kubectl apply -f nhost/mkcertissuer.yaml
 
 helm install --debug nhost nhost > out.yaml
 watch -n 0.5 kubectl get pods --all-namespaces
+
+# optionally enable access logs
+kubectl apply -f nhost/traefik-enable-access-logs.yml
 ```
