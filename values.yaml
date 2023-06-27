@@ -26,13 +26,14 @@ global:
 
   # -- Shared ingress settings
   ingress:
-    enableTls: false
+    enableTls: true
     className: traefik
     annotations:
-      cert-manager.io/cluster-issuer: ca-issuer
+      cert-manager.io/issuer: ca-issuer
 
   secrets:
     jwtKey: 5152fa850c02dc222631cca898ed1485821a70912a6e3649c49076912daa3b62182ba013315915d64f40cddfbb8b58eb5bd11ba225336a6af45bbae07ca873f3
+    # This is the admin secret for Hasura. It is used to access the Hasura console and API.
     admin: nhost-admin-secret
 
 auth:
@@ -58,7 +59,7 @@ auth:
   image:
     repository: nhost/hasura-auth
     pullPolicy: IfNotPresent
-    tag: "0.19.1"
+    tag: "0.21.0"
 
   replicaCount: 1
   autoscaling:
@@ -88,7 +89,7 @@ dashboard:
   image:
     repository: nhost/dashboard
     pullPolicy: IfNotPresent
-    tag: "0.13.10"
+    tag: "0.17.14"
 
   replicaCount: 1
   autoscaling:
@@ -146,7 +147,7 @@ storage:
   image:
     repository: nhost/hasura-storage
     pullPolicy: IfNotPresent
-    tag: "0.3.4"
+    tag: "0.3.5"
 
   replicaCount: 1
   autoscaling:
@@ -176,7 +177,8 @@ graphql:
     console: nhost-console.local
 
   # -- You can enable persistance before migrations in order to copy the needed files
-  # `kubectl cp` can be used for that
+  # `kubectl cp` can be used for that. In that case you could copy the migrations and metadata manually into the volume. 
+  # However, you would also have to disable the initContainer in order to prevent the migrations from running twice.
   persistence:
     enabled: true
     size: 1Gi
@@ -184,6 +186,7 @@ graphql:
   # -- persistence is required for this to work
   migrations:
     enabled: true
+    # -- This is the name of the configMap that contains the migrations. Check the readme to see how to generate these migratiosn and metadata tarballs.     
     configMaps:
       nhost:
         name: migrations.tar.bz2
@@ -196,7 +199,7 @@ graphql:
   image:
     repository: hasura/graphql-engine
     pullPolicy: IfNotPresent
-    tag: v2.21.0-ce.cli-migrations-v3
+    tag: v2.28.0-ce.cli-migrations-v3
 
   replicaCount: 1
   autoscaling:

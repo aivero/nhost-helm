@@ -7,6 +7,7 @@ metadata:
   labels:
     {{- include "nhost.labels" . | nindent 4 }}
     app.kubernetes.io/component: auth
+  # fixme: make this specific for different ingress controllers, such as nginx and traefik
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$2
   {{- with .Values.global.ingress.annotations }}
@@ -19,6 +20,14 @@ spec:
     http:
       paths:
       - path: /v1/auth(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ include "nhost.fullname" . }}-auth
+            port:
+              name: http
+      paths:
+      - path: /healthz(/|$)(.*)
         pathType: Prefix
         backend:
           service:
