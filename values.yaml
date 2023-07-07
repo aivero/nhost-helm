@@ -174,7 +174,7 @@ graphql:
   # -- API and console can have different hostnames
   hostnames:
     api: nhost.local
-    console: nhost-console.local
+    console: nhost.local
 
   # -- You can enable persistance before migrations in order to copy the needed files
   # `kubectl cp` can be used for that. In that case you could copy the migrations and metadata manually into the volume. 
