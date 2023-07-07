@@ -169,6 +169,6 @@ images=($(< dockerContainerList.txt)); for image in "${images[@]}"; do docker pu
 Now you can load this tarball RIGHT after starting a new k3d cluster:
 ```
 k3d cluster create nhost
-k3d image import all_images.tar -c nhost
+k3d image import all_images.tar -c
 
 ```

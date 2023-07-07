@@ -20,7 +20,7 @@ spec:
   - host: {{ .Values.graphql.hostnames.console }}
     http:
       paths:
-      - path: /
+      - path: /console
         pathType: Prefix
         backend:
           service:

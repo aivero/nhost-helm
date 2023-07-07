@@ -20,7 +20,7 @@ spec:
   - host: {{ .Values.dashboard.hostname }}
     http:
       paths:
-      - path: /
+      - path: /dashboard
         pathType: Prefix
         backend:
           service:

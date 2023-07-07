@@ -26,7 +26,6 @@ spec:
             name: {{ include "nhost.fullname" . }}-auth
             port:
               name: http
-      paths:
       - path: /healthz(/|$)(.*)
         pathType: Prefix
         backend:
