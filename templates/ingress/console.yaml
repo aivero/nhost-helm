@@ -1,3 +1,5 @@
+---
+{{- if eq .Values.global.ingress.className "nginx" }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -17,7 +19,7 @@ metadata:
 spec:
   ingressClassName: {{ .Values.global.ingress.className }}
   rules:
-  - host: {{ .Values.graphql.hostnames.console }}
+  - host: {{ default .Values.global.ingress.hostname .Values.graphql.hostnames.console }}
     http:
       paths:
       - path: /console
@@ -27,9 +29,54 @@ spec:
             name: {{ include "nhost.fullname" . }}-graphql
             port:
               name: http
-{{- if .Values.global.ingress.enableTls }}
+  {{- if .Values.global.ingress.enableTls }}
   tls:
   - hosts:
-      - {{ .Values.graphql.hostnames.console }}
+      - {{ default .Values.global.ingress.hostname .Values.graphql.hostnames.console }}
     secretName: {{ include "nhost.fullname" . }}-console-tls
+  {{- end }}
+
+{{- else if eq .Values.global.ingress.className "traefik" }}
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "nhost.fullname" . }}-console
+  labels:
+    {{- include "nhost.labels" . | nindent 4 }}
+    app.kubernetes.io/component: graphql
+
+  {{- with .Values.global.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`{{ default .Values.global.ingress.hostname .Values.graphql.hostnames.console }}`) && Prefix(/console)
+    kind: Rule
+    services:
+    - name: {{ include "nhost.fullname" . }}-console
+      port: http
+  {{- if .Values.global.dashboard.password }}
+    middlewares:
+    - name: {{ include "nhost.fullname" . }}-console-basic-auth
+  {{- end }}
+
+  {{- if .Values.global.ingress.enableTls }}
+  tls:
+    secretName: {{ include "nhost.fullname" . }}-tls
+  {{- end }}
+
+---
+
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "nhost.fullname" . }}-console-basic-auth
+spec:
+  basicAuth:
+    secret: {{ include "nhost.fullname" $ }}-http
+    realm: "Authentication Required - ok"
+
 {{- end }}
+

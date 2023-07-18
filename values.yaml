@@ -26,7 +26,9 @@ global:
 
   # -- Shared ingress settings
   ingress:
+    hostname: "nhost.local"
     enableTls: true
+    # Some services require a specific ingress class to handle e.g. stripping. We include both traefik and nginx. 
     className: traefik
     annotations:
       cert-manager.io/issuer: ca-issuer
@@ -41,8 +43,8 @@ auth:
   enabled: true
   # -- Auth log level
   logLevel: info
-  # -- Auth hostname
-  hostname: nhost.local
+  # -- Auth hostname to override the ingress.hostname
+  hostname: ""
 
   # -- Extra env vars
   env:
@@ -81,8 +83,8 @@ auth:
 dashboard:
   # -- 
   enabled: true
-  # -- Dashboard hostname
-  hostname: nhost-dashboard.local
+  # -- Dashboard hostname to override the ingress.hostname
+  hostname: ""
   # -- Dashboard env mode
   env: prod
 
@@ -171,10 +173,10 @@ graphql:
   logLevel: info
   unauthorizedRole: public
 
-  # -- API and console can have different hostnames
+  # -- API and console can have different hostnames. These override the ingress.hostname
   hostnames:
-    api: nhost.local
-    console: nhost.local
+    api: ""
+    console: ""
 
   # -- You can enable persistance before migrations in order to copy the needed files
   # `kubectl cp` can be used for that. In that case you could copy the migrations and metadata manually into the volume. 

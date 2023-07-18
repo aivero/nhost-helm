@@ -12,16 +12,10 @@ metadata:
 spec:
   ingressClassName: {{ .Values.global.ingress.className }}
   rules:
-  - host: {{ .Values.graphql.hostnames.api }}
+  - host: {{ default .Values.global.ingress.hostname .Values.graphql.hostnames.api }}
     http:
       paths:
-      - path: /hasura/
-        pathType: Prefix
-        backend:
-          service:
-            name: {{ include "nhost.fullname" . }}-graphql
-            port:
-              name: http
+      # todo: Consider explicitly not to trigger on /v1/functions as that one is for the functions ingress.
       - path: /v1/
         pathType: Prefix
         backend:
@@ -46,6 +40,8 @@ spec:
 {{- if .Values.global.ingress.enableTls }}
   tls:
   - hosts:
-      - {{ .Values.graphql.hostnames.api }}
+      - {{ default .Values.global.ingress.hostname .Values.graphql.hostnames.api }}
     secretName: {{ include "nhost.fullname" . }}-api-tls
 {{- end }}
+
+# todo: Add ingress for traefik

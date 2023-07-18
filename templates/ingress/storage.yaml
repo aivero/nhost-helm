@@ -16,7 +16,7 @@ metadata:
 spec:
   ingressClassName: {{ .Values.global.ingress.className }}
   rules:
-  - host: {{ .Values.graphql.hostnames.api }}
+  - host: {{ default .Values.global.ingress.hostname .Values.graphql.hostnames.api }}
     http:
       paths:
       - path: /v1/storage(/|$)(.*)
@@ -29,6 +29,7 @@ spec:
 {{- if .Values.global.ingress.enableTls }}
   tls:
   - hosts:
-      - {{ .Values.graphql.hostnames.api }}
+      - {{ default .Values.global.ingress.hostname .Values.graphql.hostnames.api }}
     secretName: {{ include "nhost.fullname" . }}-api-tls
 {{- end }}
+# todo: Add ingress for traefik
