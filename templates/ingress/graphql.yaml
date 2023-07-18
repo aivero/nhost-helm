@@ -1,3 +1,4 @@
+# Note that there is no nginx specific configuration here. Therefore, we do not need to explicitly care about nginx vs traefik.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -43,5 +44,3 @@ spec:
       - {{ default .Values.global.ingress.hostname .Values.graphql.hostnames.api }}
     secretName: {{ include "nhost.fullname" . }}-api-tls
 {{- end }}
-
-# todo: Add ingress for traefik

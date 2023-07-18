@@ -1,4 +1,5 @@
 {{- if .Values.functions.enabled }}
+{{- if eq .Values.global.ingress.className "nginx" }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -25,12 +26,50 @@ spec:
             name: {{ include "nhost.fullname" . }}-functions
             port:
               name: http
-{{- if .Values.global.ingress.enableTls }}
+  {{- if .Values.global.ingress.enableTls }}
   tls:
   - hosts:
       - {{ default .Values.global.ingress.hostname .Values.graphql.hostnames.api }}
     secretName: {{ include "nhost.fullname" . }}-api-tls
-{{- end }}
-{{- end }}
+  {{- end }}
+{{- else if eq .Values.global.ingress.className "traefik" }}
 
-# todo: Add ingress for traefik
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "nhost.fullname" . }}-functions
+  labels:
+    {{- include "nhost.labels" . | nindent 4 }}
+    app.kubernetes.io/component: functions
+
+  {{- with .Values.global.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`{{- default .Values.global.ingress.hostname .Values.graphql.hostnames.api -}}`) && Prefix(/v1/functions)
+    kind: Rule
+    services:
+    - name: {{ include "nhost.fullname" . }}-functions
+      port: http
+    middlewares:
+    - name: {{ include "nhost.fullname" . }}-functions-stripprefix
+
+  {{- if .Values.global.ingress.enableTls }}
+  tls:
+    secretName: {{ include "nhost.fullname" . }}-tls
+  {{- end }}
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "nhost.fullname" . }}-functions-stripprefix
+spec:
+  stripPrefix:
+    prefixes:
+      - "/v1/functions"
+{{- end }}
+{{- end }}

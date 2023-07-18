@@ -1,3 +1,4 @@
+{{- if eq .Values.global.ingress.className "nginx" }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -9,6 +10,7 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-body-size: "0"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+# fixme: Test if the equivalent of this is needed for traefik. With Traefik we need to configure this globally or maybe on the entrypoint.
     nginx.ingress.kubernetes.io/rewrite-target: /v1/$2
   {{- with .Values.global.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
@@ -26,10 +28,52 @@ spec:
             name: {{ include "nhost.fullname" . }}-storage
             port:
               name: http
-{{- if .Values.global.ingress.enableTls }}
+  {{- if .Values.global.ingress.enableTls }}
   tls:
   - hosts:
       - {{ default .Values.global.ingress.hostname .Values.graphql.hostnames.api }}
     secretName: {{ include "nhost.fullname" . }}-api-tls
+  {{- end }}
+
+{{- else if eq .Values.global.ingress.className "traefik" }}
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "nhost.fullname" . }}-storage
+  labels:
+    {{- include "nhost.labels" . | nindent 4 }}
+    app.kubernetes.io/component: storage
+
+  {{- with .Values.global.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`{{- default .Values.global.ingress.hostname .Values.graphql.hostnames.api -}}`) && Prefix(/v1/storage)
+    kind: Rule
+    services:
+    - name: {{ include "nhost.fullname" . }}-storage
+      port: http
+    middlewares:
+    - name: {{ include "nhost.fullname" . }}-storage-stripprefix
+
+  {{- if .Values.global.ingress.enableTls }}
+  tls:
+    secretName: {{ include "nhost.fullname" . }}-tls
+  {{- end }}
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "nhost.fullname" . }}-storage-stripprefix
+spec:
+  stripPrefix:
+    prefixes:
+      - "/v1/storage"
+
 {{- end }}
+
 # todo: Add ingress for traefik
