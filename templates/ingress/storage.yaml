@@ -51,7 +51,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-  - match: Host(`{{- default .Values.global.ingress.hostname .Values.graphql.hostnames.api -}}`) && Prefix(/v1/storage)
+  - match: Host(`{{- default .Values.global.ingress.hostname .Values.graphql.hostnames.api -}}`) && PathPrefix(`/v1/storage`)
     kind: Rule
     services:
     - name: {{ include "nhost.fullname" . }}-storage

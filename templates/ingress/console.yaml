@@ -52,7 +52,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-  - match: Host(`{{ default .Values.global.ingress.hostname .Values.graphql.hostnames.console }}`) && Prefix(/console)
+  - match: Host(`{{ default .Values.global.ingress.hostname .Values.graphql.hostnames.console }}`) && PathPrefix(`/console`)
     kind: Rule
     services:
     - name: {{ include "nhost.fullname" . }}-console
