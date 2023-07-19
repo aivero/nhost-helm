@@ -45,6 +45,7 @@ metadata:
     app.kubernetes.io/component: storage
 
   {{- with .Values.global.ingress.annotations }}
+  annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
@@ -61,7 +62,7 @@ spec:
 
   {{- if .Values.global.ingress.enableTls }}
   tls:
-    secretName: {{ include "nhost.fullname" . }}-tls
+    secretName: {{ include "nhost.fullname" . }}-storage-tls
   {{- end }}
 
 ---

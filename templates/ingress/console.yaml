@@ -46,6 +46,7 @@ metadata:
     app.kubernetes.io/component: graphql
 
   {{- with .Values.global.ingress.annotations }}
+  annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:

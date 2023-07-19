@@ -43,6 +43,7 @@ metadata:
     app.kubernetes.io/component: functions
 
   {{- with .Values.global.ingress.annotations }}
+  annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
@@ -59,7 +60,7 @@ spec:
 
   {{- if .Values.global.ingress.enableTls }}
   tls:
-    secretName: {{ include "nhost.fullname" . }}-tls
+    secretName: {{ include "nhost.fullname" . }}-functions-tls
   {{- end }}
 
 ---
