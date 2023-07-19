@@ -52,7 +52,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-  - match: Host(`{{ default .Values.global.ingress.hostname .Valuee }}`) && Prefix(/dashboard)
+  - match: Host(`{{ default .Values.global.ingress.hostname .Values.dashboard.hostname }}`) && Prefix(/dashboard)
     kind: Rule
     services:
     - name: {{ include "nhost.fullname" . }}-dashboard
