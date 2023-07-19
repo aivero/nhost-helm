@@ -55,7 +55,7 @@ spec:
   - match: Host(`{{ default .Values.global.ingress.hostname .Values.graphql.hostnames.console }}`) && PathPrefix(`/console`)
     kind: Rule
     services:
-    - name: {{ include "nhost.fullname" . }}-console
+    - name: {{ include "nhost.fullname" . }}-graphql
       port: http
   {{- if .Values.global.dashboard.password }}
     middlewares:
