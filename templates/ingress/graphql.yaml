@@ -2,7 +2,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "nhost.fullname" . }}-graphql
+  name: {{ include "nhost.fullname" . }}-graphql-ingress
   labels:
     {{- include "nhost.labels" . | nindent 4 }}
     app.kubernetes.io/component: graphql

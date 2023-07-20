@@ -2,7 +2,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "nhost.fullname" . }}-storage
+  name: {{ include "nhost.fullname" . }}-storage-ingress
   labels:
     {{- include "nhost.labels" . | nindent 4 }}
     app.kubernetes.io/component: storage
@@ -39,7 +39,7 @@ spec:
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
-  name: {{ include "nhost.fullname" . }}-storage
+  name: {{ include "nhost.fullname" . }}-storage-ingress-route
   labels:
     {{- include "nhost.labels" . | nindent 4 }}
     app.kubernetes.io/component: storage
@@ -62,7 +62,7 @@ spec:
 
   {{- if .Values.global.ingress.enableTls }}
   tls:
-    secretName: {{ include "nhost.fullname" . }}-storage-tls
+    secretName: {{ include "nhost.fullname" . }}-api-tls
   {{- end }}
 
 ---

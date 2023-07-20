@@ -4,7 +4,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "nhost.fullname" . }}-functions
+  name: {{ include "nhost.fullname" . }}-functions-ingress
   labels:
     {{- include "nhost.labels" . | nindent 4 }}
     app.kubernetes.io/component: functions
@@ -37,7 +37,7 @@ spec:
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
-  name: {{ include "nhost.fullname" . }}-functions
+  name: {{ include "nhost.fullname" . }}-functions-ingress-route
   labels:
     {{- include "nhost.labels" . | nindent 4 }}
     app.kubernetes.io/component: functions
@@ -60,7 +60,7 @@ spec:
 
   {{- if .Values.global.ingress.enableTls }}
   tls:
-    secretName: {{ include "nhost.fullname" . }}-functions-tls
+    secretName: {{ include "nhost.fullname" . }}-api-tls
   {{- end }}
 
 ---
@@ -72,5 +72,6 @@ spec:
   stripPrefix:
     prefixes:
       - "/v1/functions"
+
 {{- end }}
 {{- end }}
