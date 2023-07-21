@@ -62,7 +62,7 @@ spec:
 
   {{- if .Values.global.ingress.enableTls }}
   tls:
-    secretName: {{ include "nhost.fullname" . }}-api-tls
+    secretName: {{ include "nhost.fullname" . }}-auth-tls
   {{- end }}
 
 ---
