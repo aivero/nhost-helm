@@ -68,8 +68,8 @@ spec:
     secretName: {{ include "nhost.fullname" . }}-dashboard-tls
   {{- end }}
 
+{{- if .Values.global.dashboard.password }}
 ---
-
 apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
@@ -78,6 +78,8 @@ spec:
   basicAuth:
     secret: {{ include "nhost.fullname" $ }}-http
     realm: "Authentication Required - ok"
+{{- end }}
+
 
 {{- end }}
 
