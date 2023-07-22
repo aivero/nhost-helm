@@ -79,6 +79,14 @@ spec:
     services:
     - name: {{ include "nhost.fullname" . }}-graphql
       port: http
+  - match: Host(`{{ default .Values.global.ingress.hostname .Values.graphql.hostnames.api }}`) && PathPrefix(`/hasura/`)
+    kind: Rule
+    services:
+    - name: {{ include "nhost.fullname" . }}-graphql
+      port: http
+    middlewares:
+    - name: {{ include "nhost.fullname" . }}-hasura-stripprefix
+
   {{- if .Values.global.dashboard.password }}
     middlewares:
     - name: {{ include "nhost.fullname" . }}-api-basic-auth
@@ -98,5 +106,15 @@ spec:
   basicAuth:
     secret: {{ include "nhost.fullname" $ }}-http
     realm: "Authentication Required - ok"
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "nhost.fullname" . }}-hasura-stripprefix
+spec:
+  stripPrefix:
+    prefixes:
+      - "/hasura"
 
 {{- end }}
