@@ -1,50 +1,24 @@
 {{- if .Values.auth.enabled }}
 
-{{- if eq .Values.global.ingress.className "nginx" }}
 ---
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
 metadata:
-  name: {{ include "nhost.fullname" . }}-auth-ingress
-  labels:
-    {{- include "nhost.labels" . | nindent 4 }}
-    app.kubernetes.io/component: auth
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-  {{- with .Values.global.ingress.annotations }}
-  annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
+  name: {{ include "nhost.fullname" . }}-auth-stripprefix
 spec:
-  ingressClassName: {{ .Values.global.ingress.className }}
-  rules:
-  - host: {{- default .Values.global.ingress.hostname .Values.auth.hostname -}}
-    http:
-      paths:
-      - path: /v1/auth(/|$)(.*)
-        pathType: Prefix
-        backend:
-          service:
-            name: {{ include "nhost.fullname" . }}-auth
-            port:
-              name: http
+  stripPrefix:
+    prefixes:
+      - /v1/auth
 
-  {{- if .Values.global.ingress.enableTls }}
-  tls:
-  - hosts:
-      - {{ .Values.auth.hostname }}
-    secretName: {{ include "nhost.fullname" . }}-auth-tls
-  {{- end }}
-{{- else if eq .Values.global.ingress.className "traefik" }}
+---
 
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
-  name: {{ include "nhost.fullname" . }}-auth-ingress-route
+  name: {{ include "nhost.fullname" . }}-auth
   labels:
     {{- include "nhost.labels" . | nindent 4 }}
     app.kubernetes.io/component: auth
-
   {{- with .Values.global.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
   {{- end }}
@@ -62,18 +36,10 @@ spec:
 
   {{- if .Values.global.ingress.enableTls }}
   tls:
+    - hosts:
+      - {{ .Values.auth.hostname }}
     secretName: {{ include "nhost.fullname" . }}-auth-tls
   {{- end }}
-
----
-apiVersion: traefik.containo.us/v1alpha1
-kind: Middleware
-metadata:
-  name: {{ include "nhost.fullname" . }}-auth-stripprefix
-spec:
-  stripPrefix:
-    prefixes:
-      - "/v1/auth"
 
 {{- end }}
 {{- end }}

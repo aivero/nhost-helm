@@ -18,7 +18,6 @@ spec:
   - host: {{ default .Values.global.ingress.hostname .Values.graphql.hostnames.api }}
     http:
       paths:
-      # todo: Consider explicitly not to trigger on /v1/functions as that one is for the functions ingress.
       - path: /v1/
         pathType: Prefix
         backend:
@@ -26,14 +25,28 @@ spec:
             name: {{ include "nhost.fullname" . }}-graphql
             port:
               name: http
-      - path: /v1alpha1/
+      - path: /v2/
         pathType: Prefix
         backend:
           service:
             name: {{ include "nhost.fullname" . }}-graphql
             port:
               name: http
-      - path: /v2/
+      - path: /v1alpha1
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ include "nhost.fullname" . }}-graphql
+            port:
+              name: http
+      - path: /console
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ include "nhost.fullname" . }}-graphql
+            port:
+              name: http
+      - path: /healthz
         pathType: Prefix
         backend:
           service:
