@@ -187,16 +187,8 @@ graphql:
 
   # -- persistence is required for this to work
   migrations:
-    enabled: true
-    # -- This is the name of the configMap that contains the migrations. Check the readme to see how to generate these migratiosn and metadata tarballs.     
-    configMaps:
-      nhost:
-        name: migrations.tar.bz2
-        file: migrations.tar.bz2
-  metadata:
-    configMap:
-      name: metadata.tar.bz2
-      file: metadata.tar.bz2
+    enabled: true 
+    # It only makes sense to set it true in Aivero, because the empty schema is useless for us
 
   image:
     repository: hasura/graphql-engine
@@ -246,7 +238,7 @@ minio:
   auth:
     rootUser: admin
     rootPassword: youshouldchangethis
-    forceNewKeys: true
+    forceNewKeys: true 
 
 ##
 ## PostgreSQL Database

@@ -36,79 +36,30 @@ spec:
       serviceAccountName: {{ include "nhost.serviceAccountName" . }}
       securityContext:
         fsGroup: 2000
-      volumes:
         {{- if .Values.graphql.persistence.enabled }}
-        - name: data
-          persistentVolumeClaim:
-            claimName: {{ include "nhost.fullname" $ }}-graphql       
-        {{- end }}
-        
-        {{- range $k, $v := .Values.graphql.migrations.configMaps }}
-        - name: {{ $k | quote }}
-          configMap:
-            name: {{ include "common.tplvalues.render" (dict "value" (printf "%s-%s-migration" $fullname $v.name) "context" $) }}
-        {{- end }}
-        
-        {{- if .Values.graphql.metadata.configMap }}
-        - name: metadata
-          configMap:
-            name: {{ include "common.tplvalues.render" (dict "value" (printf "%s-%s-metadata" $fullname .Values.graphql.metadata.configMap.name ) "context" $) }}
-        
-        {{- end}}
+      volumes:
+      - name: data
+        configMap:
+          name: hasura-data
+      - name: data-copied
+        emptyDir:
+          medium: Memory 
+            {{- end }}        
       initContainers:
-      - name: unpack-migration-metadata-tarballs-for-mounts
-        image: alpine
-        # todo: download migrations and metadata tarball from a cicd release of the matching branch (gitlab package registry)
-        command:
-          - sh
-          - "-c"
-          - |
-            set -e
-            apk add tree tar
-            {{- if .Values.graphql.metadata.configMap }}
-            tree -alh /metadata
-            mkdir -p /data/metadata || true
-            tar xvfj /metadata/metadata.tar.bz2 -C /data/metadata
-            tree -alh /data/metadata
-            {{- end }}
-            mkdir -p /data/migrations || true
-            {{- range $k, $v := .Values.graphql.migrations.configMaps }}
-            tree -alh /migrations
-            {{ printf "tar xvfj /migrations/%s/%s -C /data/migrations" $k (default "migrations.tar.bz2" $v.file) }}
-            tree -alh /data/migrations
-            {{- end }}
-
+      - name: {{ .Chart.Name }}-init
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 12 }}
+        image: "busybox:latest"
+        imagePullPolicy: {{ .Values.graphql.image.pullPolicy }}
+        command: ["/bin/sh"]
+        args: ["-c", "tar -xf /copy/data.tar.gz -C /data"]
+        resources:
+          {{- toYaml .Values.graphql.resources | nindent 12 }}
         volumeMounts:
-          {{- range $k, $v := (((.Values).graphql).migrations).configMaps }}
-          - name: {{ $k | quote }}
-            mountPath: {{ printf "/migrations/%s/%s" $k (default "migrations.tar.bz2" $v.file) }}
-            subPath: {{ default "migrations.tar.bz2" $v.file }}
-          {{- end }}
-          {{- if ((.Values.graphql).metadata).configMap }}
-          - name: metadata
-            mountPath: /metadata/{{ default "metadata.tar.bz2" .Values.graphql.metadata.configMap.file }}
-            subPath: {{ default "metadata.tar.bz2" .Values.graphql.metadata.configMap.file }}
-          {{- end }}
-          - name: data
-            mountPath: /data
-      - name: wait-postgres
-        image: postgres:14.4-alpine
-        envFrom:
-          - secretRef:
-              name: {{ include "nhost.fullname" $ }}-database
-        command:
-          - 'sh'
-          - '-c'
-          - |
-            # make sure pg is ready to accept connections, user/pw are not strictly required
-            until pg_isready -d "$HASURA_GRAPHQL_DATABASE_URL"
-            do
-              echo "Waiting for postgres to be ready..."
-              sleep 2;
-            done
-            # Now able to connect to postgres
-            echo "Postgres is ready! Starting graphql server..."
-
+        - mountPath: /copy
+          name: data
+        - mountPath: /data
+          name: data-copied
       containers:
       - name: {{ .Chart.Name }}
         securityContext:
@@ -139,6 +90,9 @@ spec:
           failureThreshold: 5
         resources:
           {{- toYaml .Values.graphql.resources | nindent 12 }}
+        volumeMounts:
+        - mountPath: /data
+          name: data-copied
         env:
         - name: HASURA_GRAPHQL_LOG_LEVEL
           value: {{ .Values.graphql.logLevel }}
@@ -149,23 +103,17 @@ spec:
         - name: HASURA_GRAPHQL_ENABLE_TELEMETRY
           value: "false"
 {{- if and .Values.graphql.persistence.enabled .Values.graphql.migrations.enabled }}
-        - name: HASURA_GRAPHQL_MIGRATIONS_DIR
-          value: "/data/migrations"
-        - name: HASURA_GRAPHQL_METADATA_DIR
-          value: "/data/metadata"
+        - name: "HASURA_GRAPHQL_MIGRATIONS_DIR"
+          value: "/data/nhost/migrations"
+        - name: "HASURA_GRAPHQL_METADATA_DIR"
+          value: "/data/nhost/metadata"
 {{- end }}
         envFrom:
-        - configMapRef:
-            name: {{ include "nhost.fullname" $ }}-env
-        - secretRef:
-            name: {{ include "nhost.fullname" $ }}-env
-        - secretRef:
-            name: {{ include "nhost.fullname" $ }}-database
-{{- if .Values.graphql.persistence.enabled }}
-        volumeMounts:
-        - mountPath: /data
-          name: data
-{{- end }}
+          - secretRef:
+              name: {{ include "nhost.fullname" $ }}-env
+          - secretRef:
+              name: {{ include "nhost.fullname" $ }}-database
+
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

@@ -8,5 +8,8 @@ dependencies:
 - name: mailhog
   repository: https://codecentric.github.io/helm-charts
   version: 5.2.3
-digest: sha256:1611d0d750db57c9cd04026fc52d182a749b9b116a6f8735c357a65e9b252c86
-generated: "2023-03-28T00:05:59.191369464+02:00"
+- name: common
+  repository: oci://registry-1.docker.io/bitnamicharts
+  version: 2.13.2
+digest: sha256:cc5216882053a5c112c67c627ba8bfd37f6688c7c2c7e565c43cb5a2f5beddd3
+generated: "2023-10-17T11:14:26.402487906+02:00"
