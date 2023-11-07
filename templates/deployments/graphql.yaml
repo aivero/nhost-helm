@@ -40,7 +40,7 @@ spec:
       volumes:
       - name: data
         configMap:
-          name: hasura-data
+          name: migrations
       - name: data-copied
         emptyDir:
           medium: Memory 
@@ -52,7 +52,7 @@ spec:
         image: "busybox:latest"
         imagePullPolicy: {{ .Values.graphql.image.pullPolicy }}
         command: ["/bin/sh"]
-        args: ["-c", "tar -xf /copy/data.tar.gz -C /data"]
+        args: ["-c", "tar -xf /copy/migrations.tar.gz -C /data"]
         resources:
           {{- toYaml .Values.graphql.resources | nindent 12 }}
         volumeMounts:

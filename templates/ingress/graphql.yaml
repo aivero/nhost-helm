@@ -74,6 +74,11 @@ spec:
     services:
     - name: {{ include "nhost.fullname" . }}-graphql
       port: http
+  - match: Host(`{{ default .Values.global.ingress.hostname .Values.graphql.hostnames.api }}`) && PathPrefix(`/healthz`)
+    kind: Rule
+    services:
+    - name: {{ include "nhost.fullname" . }}-graphql
+      port: http
   - match: Host(`{{ default .Values.global.ingress.hostname .Values.graphql.hostnames.api }}`) && PathPrefix(`/v2/`)
     kind: Rule
     services:
@@ -86,9 +91,7 @@ spec:
       port: http
     middlewares:
     - name: {{ include "nhost.fullname" . }}-hasura-stripprefix
-
   {{- if .Values.global.dashboard.password }}
-    middlewares:
     - name: {{ include "nhost.fullname" . }}-api-basic-auth
   {{- end }}
 
