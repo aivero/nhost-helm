@@ -62,14 +62,14 @@ spec:
             path: /healthz
             port: http
           periodSeconds: 10
-          failureThreshold: 3
+          failureThreshold: 15
         startupProbe:
           httpGet:
             path: /healthz
             port: http
           initialDelaySeconds: 2
           periodSeconds: 3
-          failureThreshold: 5
+          failureThreshold: 15
         resources:
           {{- toYaml .Values.graphql.resources | nindent 12 }}
         volumeMounts:

@@ -60,13 +60,13 @@ spec:
             path: /
             port: http
           periodSeconds: 10
-          failureThreshold: 3
+          failureThreshold: 15
         readinessProbe:
           httpGet:
             path: /
             port: http
           periodSeconds: 10
-          failureThreshold: 3
+          failureThreshold: 15
         resources:
           {{- toYaml .Values.dashboard.resources | nindent 12 }}
         env:
