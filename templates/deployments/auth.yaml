@@ -114,8 +114,8 @@ spec:
           name: data
       volumes:
       - name: data
-        persistentVolumeClaim:
-          claimName: {{ include "nhost.fullname" $ }}-auth-email-templates
+        emptyDir:
+          sizeLimit: 1Mi
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
