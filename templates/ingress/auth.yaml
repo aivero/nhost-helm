@@ -61,8 +61,15 @@ spec:
     - name: {{ include "nhost.fullname" . }}-auth-stripprefix
 
   {{- if .Values.global.ingress.enableTls }}
-  tls:
+  tls:  
+    {{- if .Values.global.ingress.useTlsSecret }}
+    secretName: {{ .Values.global.ingress.tlsSecret }}
+    {{- else }}
+
+    domains: 
+    - main: {{ default .Values.global.ingress.hostname .Values.auth.hostname }}
     secretName: {{ include "nhost.fullname" . }}-auth-tls
+    {{- end }}
   {{- end }}
 
 ---

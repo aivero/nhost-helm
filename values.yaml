@@ -18,7 +18,7 @@ imagePullSecrets: []
 global:
   logLevel: INFO
   unauthorizedRole: public
-
+  storageClassName: FIX_ME
   # -- HTTP auth for NHost dashboard and Hasura console. Disabled when password is empty.
   dashboard:
     user: admin
@@ -30,8 +30,9 @@ global:
     enableTls: true
     # Some services require a specific ingress class to handle e.g. stripping. We include both traefik and nginx. 
     className: traefik
-    annotations:
-      cert-manager.io/issuer: ca-issuer
+    useTlsSecret: false
+    tlsSecret: secret
+    annotations: {}
 
   secrets:
     jwtKey: 5152fa850c02dc222631cca898ed1485821a70912a6e3649c49076912daa3b62182ba013315915d64f40cddfbb8b58eb5bd11ba225336a6af45bbae07ca873f3
