@@ -84,13 +84,6 @@ spec:
     services:
     - name: {{ include "nhost.fullname" . }}-graphql
       port: http
-  - match: Host(`{{ default .Values.global.ingress.hostname .Values.graphql.hostnames.api }}`) && PathPrefix(`/hasura/`)
-    kind: Rule
-    services:
-    - name: {{ include "nhost.fullname" . }}-graphql
-      port: http
-    middlewares:
-    - name: {{ include "nhost.fullname" . }}-hasura-stripprefix
   {{- if .Values.global.dashboard.password }}
     - name: {{ include "nhost.fullname" . }}-api-basic-auth
   {{- end }}
